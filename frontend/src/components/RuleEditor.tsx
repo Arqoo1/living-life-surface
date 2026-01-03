@@ -45,7 +45,7 @@ export const RuleEditor = ({
           minimap: { enabled: false },
           lineNumbers: "on",
           padding: { top: 20 },
-          automaticLayout: true, 
+          automaticLayout: true,
         }}
         onChange={(value) => onSave(value || "")}
       />

@@ -11,9 +11,9 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post("/", createRule);
-router.get("/", getRules);      
-router.patch("/:id", updateRule);
-router.delete("/:id", deleteRule);
+router.get("/", getRules);          
+router.post("/", createRule);         
+router.patch("/:id", updateRule);     
+router.delete("/:id", deleteRule);    
 
 export default router;

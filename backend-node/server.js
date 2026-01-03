@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 
-// Import routes
 import momentRoutes from "./routes/moments.js";
 import trackRoutes from "./routes/tracks.js";
 import ruleRoutes from "./routes/rules.js";
