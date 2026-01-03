@@ -1,19 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { db } from "../db";
 
 const Header: React.FC = () => {
-  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const location = useLocation();
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("token")
+  );
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
 
+  const location = useLocation();
 
   useEffect(() => {
     setToken(localStorage.getItem("token"));
   }, [location]);
 
-  const handleLogout = () => {
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const handleLogout = async () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
-    setToken(null); 
+    await db.delete();
+    await db.open();
+    setToken(null);
     window.location.href = "/login";
   };
 
@@ -28,7 +47,7 @@ const Header: React.FC = () => {
         alignItems: "center",
       }}
     >
-      <div>
+      <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
         <Link
           to="/"
           style={{
@@ -40,6 +59,32 @@ const Header: React.FC = () => {
         >
           Life Dashboard
         </Link>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            backgroundColor: "rgba(0,0,0,0.2)",
+            padding: "4px 10px",
+            borderRadius: "20px",
+            fontSize: "0.75rem",
+          }}
+        >
+          <div
+            style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              backgroundColor: isOnline ? "#4ade80" : "#9ca3af",
+              boxShadow: isOnline ? "0 0 8px #4ade80" : "none",
+              transition: "all 0.3s ease",
+            }}
+          />
+          <span style={{ opacity: 0.8, color: "#fff" }}>
+            {isOnline ? "Online" : "Offline"}
+          </span>
+        </div>
       </div>
 
       <nav style={{ display: "flex", gap: "1rem" }}>
