@@ -21,81 +21,45 @@ const Login: React.FC = () => {
         localStorage.setItem("userId", res.userId);
         navigate("/dashboard");
       } else {
-        setError(res.error || "Login failed");
+        setError(res.error || "Invalid credentials");
       }
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || "Connection failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "80vh",
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-          padding: "2rem",
-          borderRadius: "10px",
-          backgroundColor: "#fff",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          width: "300px",
-        }}
-      >
-        <h2 style={{ textAlign: "center" }}>Login</h2>
-        {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
+    <div className="login-page">
+      <form className="login-card" onSubmit={handleSubmit}>
+        <h2>Life Stream</h2>
+
+        {error && <p className="error-msg">{error}</p>}
+
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{
-            padding: "0.5rem",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-          }}
         />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{
-            padding: "0.5rem",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-          }}
         />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: "0.5rem",
-            borderRadius: "5px",
-            border: "none",
-            backgroundColor: "#2E186A",
-            color: "#fff",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          {loading ? "Logging in..." : "Login"}
+
+        <button type="submit" className="login-submit" disabled={loading}>
+          {loading ? "Authenticating..." : "Sign In"}
         </button>
-        <p style={{ textAlign: "center", fontSize: "0.9rem" }}>
-          Don't have an account? <a href="/signup">Sign Up</a>
-        </p>
+
+        <footer>
+          Don't have an account? <a href="/signup">Create one</a>
+        </footer>
       </form>
     </div>
   );

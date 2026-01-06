@@ -5,7 +5,11 @@ import Rule from "../models/Rule.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-import { defaultMoments, defaultTracks, defaultRules } from "../defaults/newUserData.js";
+import {
+  defaultMoments,
+  defaultTracks,
+  defaultRules,
+} from "../defaults/newUserData.js";
 
 export const signup = async (req, res) => {
   try {
@@ -35,9 +39,8 @@ export const signup = async (req, res) => {
 
     res.status(201).json({
       message: "User registered successfully. Please log in.",
-      userId: user._id, 
+      userId: user._id,
     });
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

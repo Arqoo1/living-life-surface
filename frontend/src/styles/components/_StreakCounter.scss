@@ -1,0 +1,36 @@
+@keyframes streak-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(251, 146, 60, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(251, 146, 60, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(251, 146, 60, 0.2);
+  }
+}
+
+.streak-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fb923c;
+  font-size: 0.85rem;
+  font-weight: bold;
+  background-color: rgba(251, 146, 60, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  width: fit-content;
+  transition: all 0.3s ease;
+
+  .fire-emoji {
+    font-size: 1rem;
+  }
+
+  &.elite-streak {
+    animation: streak-glow 2s infinite;
+    border-color: rgba(251, 146, 60, 0.4);
+    background-color: rgba(251, 146, 60, 0.15);
+  }
+}

@@ -1,0 +1,82 @@
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  .left-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    h1 {
+      margin: 0;
+      font-weight: 300;
+    }
+  }
+
+  .view-toggle-container {
+    display: flex;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2px;
+
+    .toggle-button {
+      padding: 4px 12px;
+      border-radius: 18px;
+      border: none;
+      font-size: 0.7rem;
+      cursor: pointer;
+      text-transform: capitalize;
+      background-color: transparent;
+      color: rgba(255, 255, 255, 0.4);
+      transition: all 0.2s ease;
+
+      &.active {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+    }
+  }
+
+  .manage-button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    padding: 4px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.7rem;
+  }
+
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+
+    .sync-indicator {
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(74, 222, 128, 0.2);
+      border-top: 2px solid #4ade80;
+      border-radius: 50%;
+
+      &.syncing {
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

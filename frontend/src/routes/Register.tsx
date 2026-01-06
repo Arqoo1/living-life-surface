@@ -18,12 +18,9 @@ const Register: React.FC = () => {
 
     try {
       const res = await register(username, email, password);
-
       if (res.message && !res.error) {
         setSuccess(true);
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        setTimeout(() => navigate("/login"), 2000);
       } else {
         setError(res.error || "Signup failed");
       }
@@ -35,41 +32,14 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "80vh",
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-          padding: "2rem",
-          borderRadius: "10px",
-          backgroundColor: "#fff",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          width: "300px",
-        }}
-      >
-        <h2 style={{ textAlign: "center" }}>Sign Up</h2>
+    <div className="register-page">
+      <form className="register-card" onSubmit={handleSubmit}>
+        <h2>Sign Up</h2>
 
         {success && (
-          <p
-            style={{ color: "green", textAlign: "center", fontSize: "0.9rem" }}
-          >
-            Account created! Redirecting to login...
-          </p>
+          <p className="message success">Account created! Redirecting...</p>
         )}
-        {error && (
-          <p style={{ color: "red", textAlign: "center", fontSize: "0.9rem" }}>
-            {error}
-          </p>
-        )}
+        {error && <p className="message error">{error}</p>}
 
         <input
           type="text"
@@ -78,11 +48,6 @@ const Register: React.FC = () => {
           onChange={(e) => setUsername(e.target.value)}
           required
           disabled={success}
-          style={{
-            padding: "0.5rem",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-          }}
         />
         <input
           type="email"
@@ -91,11 +56,6 @@ const Register: React.FC = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={success}
-          style={{
-            padding: "0.5rem",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-          }}
         />
         <input
           type="password"
@@ -104,28 +64,17 @@ const Register: React.FC = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
           disabled={success}
-          style={{
-            padding: "0.5rem",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-          }}
         />
+
         <button
           type="submit"
           disabled={loading || success}
-          style={{
-            padding: "0.5rem",
-            borderRadius: "5px",
-            border: "none",
-            backgroundColor: success ? "#4CAF50" : "#2E186A",
-            color: "#fff",
-            fontWeight: "bold",
-            cursor: success ? "default" : "pointer",
-          }}
+          className={`submit-btn ${success ? "success-state" : ""}`}
         >
           {loading ? "Signing up..." : success ? "Success!" : "Sign Up"}
         </button>
-        <p style={{ textAlign: "center", fontSize: "0.9rem" }}>
+
+        <p className="footer-text">
           Already have an account? <a href="/login">Login</a>
         </p>
       </form>

@@ -36,31 +36,9 @@ export const StreakCounter: React.FC<StreakCounterProps> = ({ moments }) => {
   if (streakCount === 0) return null;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-        color: "#fb923c",
-        fontSize: "0.85rem",
-        fontWeight: "bold",
-        backgroundColor: "rgba(251, 146, 60, 0.1)",
-        padding: "4px 12px",
-        borderRadius: "20px",
-        border: "1px solid rgba(251, 146, 60, 0.2)",
-        animation: streakCount >= 7 ? "glow 2s infinite" : "none",
-      }}
-    >
-      <span style={{ fontSize: "1rem" }}>🔥</span>
+    <div className={`streak-badge ${streakCount >= 7 ? "elite-streak" : ""}`}>
+      <span className="fire-emoji">🔥</span>
       <span>{streakCount} Day Streak</span>
-
-      <style>{`
-        @keyframes glow {
-          0% { box-shadow: 0 0 5px rgba(251, 146, 60, 0.2); }
-          50% { box-shadow: 0 0 15px rgba(251, 146, 60, 0.5); }
-          100% { box-shadow: 0 0 5px rgba(251, 146, 60, 0.2); }
-        }
-      `}</style>
     </div>
   );
 };

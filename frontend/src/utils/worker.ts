@@ -58,14 +58,25 @@ self.onmessage = async (event: MessageEvent<any>) => {
       });
     } else {
       const classifier = await ClassifierSingleton.getInstance();
+
+      // --- DYNAMIC HYPOTHESIS LOGIC ---
+      // If type is 'track', we ask about activity/topic.
+      // If type is 'category', we ask about the emotion/feeling.
+      const hypothesis =
+        type === "track"
+          ? "This activity is about {}."
+          : "The person feels {}.";
+
       const output = await classifier(content, categories, {
-        hypothesis_template: "This text is about {}.",
+        hypothesis_template: hypothesis,
       });
+
       console.log(
-        `📊 AI ${type} Match:`,
+        `📊 AI ${type} Match using [${hypothesis}]:`,
         output.labels[0],
         `(Score: ${output.scores[0].toFixed(3)})`
       );
+
       self.postMessage({ status: "complete", type, results: output });
     }
   } catch (error: any) {

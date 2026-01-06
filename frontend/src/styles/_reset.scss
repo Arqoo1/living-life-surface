@@ -1,14 +1,15 @@
-
-*{
+* {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
 }
+
 :root {
-  --bg-main: #ffffff; 
+  --bg-main: #ffffff;
 }
 
 body {
-  background-color: var(--bg-main) !important; 
+  background-color: var(--bg-main) !important;
   transition: background-color 1s ease;
+  font-family: "Inter", sans-serif; 
 }
