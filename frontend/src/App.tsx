@@ -7,6 +7,7 @@ import MainLayout from "./layouts/MainLayout";
 import Home from "./routes/Home";
 import Login from "./routes/Login";
 import Register from "./routes/Register";
+import Profile from "./routes/Profile";
 const App: React.FC = () => {
   return (
     <MainLayout>
@@ -15,6 +16,7 @@ const App: React.FC = () => {
         {/* <Route path="/signup" element={<Signup />} /> */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="*" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Register />} />

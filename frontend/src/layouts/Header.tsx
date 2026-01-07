@@ -94,6 +94,9 @@ const Header: React.FC = () => {
         <Link to="/dashboard" style={{ color: "#fff", textDecoration: "none" }}>
           Dashboard
         </Link>
+        <Link to="/profile" style={{ color: "#fff", textDecoration: "none" }}>
+          Profile
+        </Link>
         {!token && (
           <>
             <Link to="/login" style={{ color: "#fff", textDecoration: "none" }}>

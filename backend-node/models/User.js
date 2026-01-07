@@ -12,6 +12,12 @@ const userSchema = new mongoose.Schema(
       },
       layoutDensity: { type: String, default: "medium" },
     },
+    profilePic: {
+      type: String,
+      default: "default-guest.png", 
+    },
+    resetPasswordCode: { type: String },
+    resetPasswordExpires: { type: Date },
     rules: [{ type: mongoose.Schema.Types.ObjectId, ref: "Rule" }],
   },
   { timestamps: true }
