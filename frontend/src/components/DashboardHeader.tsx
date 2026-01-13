@@ -5,7 +5,7 @@ export const DashboardHeader = ({ d }: { d: any }) => (
   <header className="dashboard-header">
     <div className="left-section">
       <h1>Life Stream</h1>
-      <StreakCounter moments={d.moments} />
+      <StreakCounter moments={d.moments || []} />
 
       <div className="view-toggle-container">
         {["focus", "editor"].map((mode) => (

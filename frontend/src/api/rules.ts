@@ -8,17 +8,21 @@ interface CSSVariables {
 
 // Define the response from the Node API
 interface RulesResponse {
-  rules: any[]; // You can replace 'any' with a proper Rule type later
+  rules: any[];
   cssVariables: CSSVariables;
+  xp: number; // Added for Leveling System
+  level: number; // Added for Leveling System
 }
 
 // Fetch all rules from Node, which communicates with Python
 export const fetchRulesWithCSS = async (
-  token: string
+  token: string,
+  state?: any
 ): Promise<RulesResponse> => {
   try {
-    const response = await axios.get<RulesResponse>(
-      "http://localhost:5000/api/rules",
+    const response = await axios.post<RulesResponse>(
+      "http://localhost:5000/api/rules/evaluate",
+      { state },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -27,7 +31,13 @@ export const fetchRulesWithCSS = async (
     return response.data;
   } catch (err: any) {
     console.error("Failed to fetch rules:", err.message);
-    return { rules: [], cssVariables: {} };
+    // Return default values to satisfy TypeScript interface
+    return {
+      rules: [],
+      cssVariables: {},
+      xp: 0,
+      level: 1,
+    };
   }
 };
 
@@ -37,16 +47,28 @@ export const applyCSSVariables = (cssVars: CSSVariables): void => {
     document.documentElement.style.setProperty(key, value);
   });
 };
+
+// Update an existing rule
 export const updateRule = async (
   token: string,
   id: string,
-  content: string
-) => {
-  const response = await axios.patch(
-    // Changed from .put to .patch to match your router
-    `http://localhost:5000/api/rules/${id}`,
-    { content },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  return response.data;
+  content: string,
+  state?: any
+): Promise<RulesResponse> => {
+  try {
+    const response = await axios.patch<RulesResponse>(
+      `http://localhost:5000/api/rules/${id}`,
+      { content, state },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err: any) {
+    console.error("Failed to update rule:", err.message);
+    return {
+      rules: [],
+      cssVariables: {},
+      xp: 0,
+      level: 1,
+    };
+  }
 };

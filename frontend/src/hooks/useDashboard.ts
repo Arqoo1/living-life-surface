@@ -1,15 +1,22 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db";
 import { fetchRulesWithCSS, updateRule } from "../api/rules";
 import { getUserMoments, createMoment, deleteMoment } from "../api/moments";
 import { getUserTracks, createTrack, deleteTrack } from "../api/tracks";
+import { fetchProfile } from "../api/user"; // Import profile API
 
 export const useDashboard = (token: string) => {
+  // We use a ref for editorDraft so syncData can read/write it
+  // without triggering an infinite re-render loop.
+  const isInitialLoad = useRef(true);
+
   // --- IndexedDB Queries ---
   const moments =
     useLiveQuery(() => db.moments.reverse().sortBy("timestamp"), []) || [];
   const rules = useLiveQuery(() => db.rules.toArray(), []) || [];
+  // Added: Live Query for Profile data
+  const localProfile = useLiveQuery(() => db.profile.get("current"), []);
 
   // --- UI & View State ---
   const [viewMode, setViewMode] = useState<"focus" | "editor">("focus");
@@ -27,68 +34,60 @@ export const useDashboard = (token: string) => {
   const [syncMessage, setSyncMessage] = useState("Never synced");
   const [customTypes, setCustomTypes] = useState<string[]>([]);
 
-  // --- CSS Injection ---
+
+  const [xp, setXp] = useState<number | null>(null);
+  const [level, setLevel] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (localProfile) {
+      setXp(localProfile.xp ?? 0);
+      setLevel(localProfile.level ?? 1);
+    }
+  }, [localProfile]);
+
   const injectCSS = useCallback((vars: Record<string, string>) => {
+    if (!vars) return;
     Object.entries(vars).forEach(([k, v]) =>
       document.documentElement.style.setProperty(k, String(v))
     );
   }, []);
 
-  const applyCSS = useCallback(async () => {
-    if (!token) return;
-    try {
-      const { cssVariables } = await fetchRulesWithCSS(token);
-      injectCSS(cssVariables);
-    } catch (err) {
-      console.error("CSS Refresh Error:", err);
-    }
-  }, [token, injectCSS]);
-
-  // --- Derived Data: Available Types ---
-  const availableTypes = useMemo(() => {
-    const typesInData = moments.map((m) => m.type.toLowerCase());
-    const defaults = ["happy", "reflective", "focused", "stressed"];
-    return Array.from(new Set([...defaults, ...typesInData, ...customTypes]));
-  }, [moments, customTypes]);
-
-  // --- Derived Data: Filtered Moments ---
-  const filteredMoments = useMemo(() => {
-    return moments.filter((m) => {
-      const query = searchQuery.toLowerCase();
-      const momentDate = new Date(m.timestamp).toISOString().split("T")[0];
-      const matchesDate = selectedDate ? momentDate === selectedDate : true;
-      const matchesSearch =
-        m.content.toLowerCase().includes(query) ||
-        m.type.toLowerCase().includes(query) ||
-        m.track.some((t: string) => t.toLowerCase().includes(query));
-
-      return matchesDate && matchesSearch;
-    });
-  }, [moments, searchQuery, selectedDate]);
-
-  // --- Core Sync Logic ---
   const syncData = useCallback(async () => {
     if (!token) return;
     setIsSyncing(true);
     try {
-      const [mRes, tRes, rRes] = await Promise.all([
+      const [mRes, tRes, rRes, pRes] = await Promise.all([
         getUserMoments(token),
         getUserTracks(token),
         fetchRulesWithCSS(token),
+        fetchProfile(), 
       ]);
 
-      await db.transaction("rw", db.moments, db.rules, async () => {
-        await db.moments.clear();
-        await db.moments.bulkAdd(mRes);
-        await db.rules.clear();
-        await db.rules.bulkAdd(rRes.rules);
-      });
+      await db.transaction(
+        "rw",
+        [db.moments, db.rules, db.profile],
+        async () => {
+          await db.moments.clear();
+          await db.moments.bulkAdd(mRes);
+          await db.rules.clear();
+          await db.rules.bulkAdd(rRes.rules);
+          await db.profile.put({
+            id: "current",
+            ...pRes.data,
+          });
+        }
+      );
 
       setTracks(tRes);
-      if (!editorDraft || (rules[0] && editorDraft === rules[0].content)) {
-        setEditorDraft(rRes.rules[0]?.content || "");
-      }
+      setXp(pRes.data.xp || 0);
+      setLevel(pRes.data.level || 1);
       injectCSS(rRes.cssVariables);
+
+      if (isInitialLoad.current) {
+        setEditorDraft(rRes.rules[0]?.content || "");
+        isInitialLoad.current = false;
+      }
+
       setLastSynced(new Date());
     } catch (err) {
       console.error("Sync Error:", err);
@@ -96,9 +95,30 @@ export const useDashboard = (token: string) => {
       setLoading(false);
       setIsSyncing(false);
     }
-  }, [token, editorDraft, rules, injectCSS]);
+  }, [token, injectCSS]);
 
-  // --- Relative Time Logic ---
+  const applyCSS = useCallback(async () => {
+    if (!token) return;
+    try {
+      const [rRes, pRes] = await Promise.all([
+        fetchRulesWithCSS(token),
+        fetchProfile(),
+      ]);
+
+      injectCSS(rRes.cssVariables);
+
+      await db.profile.update("current", {
+        xp: pRes.data.xp,
+        level: pRes.data.level,
+      });
+
+      setXp(pRes.data.xp || 0);
+      setLevel(pRes.data.level || 1);
+    } catch (err) {
+      console.error("CSS Refresh Error:", err);
+    }
+  }, [token, injectCSS]);
+
   const updateSyncRelativeTime = useCallback(() => {
     if (!lastSynced) return;
     const now = new Date();
@@ -108,20 +128,18 @@ export const useDashboard = (token: string) => {
     else setSyncMessage(`${Math.floor(diff / 60)}m ago`);
   }, [lastSynced]);
 
-  // --- Lifecycle Effects ---
   useEffect(() => {
     syncData();
-    const syncInterval = setInterval(syncData, 30000);
+    const syncInterval = setInterval(syncData, 60000);
     return () => clearInterval(syncInterval);
-  }, [token]);
+  }, [syncData]);
 
   useEffect(() => {
-    const timeInterval = setInterval(updateSyncRelativeTime, 60000);
+    const timeInterval = setInterval(updateSyncRelativeTime, 10000);
     updateSyncRelativeTime();
     return () => clearInterval(timeInterval);
   }, [updateSyncRelativeTime]);
 
-  // --- Handlers: Moments ---
   const handleAddMoment = async (momentData: any) => {
     if (!token) return;
     setIsSyncing(true);
@@ -148,15 +166,18 @@ export const useDashboard = (token: string) => {
     }
   };
 
-  // --- Handlers: Rules ---
   const handleSaveRules = async () => {
     if (!token || !rules[0]?._id) return;
     setSaveLoading(true);
     setIsSyncing(true);
     try {
-      await updateRule(token, rules[0]._id, editorDraft);
-      const res = await fetchRulesWithCSS(token);
-      if (res.rules[0]) await db.rules.put(res.rules[0]);
+      const res = await updateRule(token, rules[0]._id, editorDraft);
+      if (res.rules && res.rules[0]) await db.rules.put(res.rules[0]);
+
+      setXp(res.xp || 0);
+      setLevel(res.level || 1);
+      await db.profile.update("current", { xp: res.xp, level: res.level });
+
       injectCSS(res.cssVariables);
       setLastSynced(new Date());
     } catch (err) {
@@ -167,7 +188,6 @@ export const useDashboard = (token: string) => {
     }
   };
 
-  // --- Handlers: Tracks & Types ---
   const handleAddTrack = async (trackName: string) => {
     if (!token) return;
     setIsSyncing(true);
@@ -224,7 +244,6 @@ export const useDashboard = (token: string) => {
     }
   };
 
-  // --- Handlers: Utility ---
   const handleExportCSV = () => {
     if (moments.length === 0) return;
     const headers = [
@@ -260,8 +279,26 @@ export const useDashboard = (token: string) => {
     document.body.removeChild(link);
   };
 
+  const availableTypes = useMemo(() => {
+    const typesInData = moments.map((m) => m.type.toLowerCase());
+    const defaults = ["happy", "reflective", "focused", "stressed"];
+    return Array.from(new Set([...defaults, ...typesInData, ...customTypes]));
+  }, [moments, customTypes]);
+
+  const filteredMoments = useMemo(() => {
+    return moments.filter((m) => {
+      const query = searchQuery.toLowerCase();
+      const momentDate = new Date(m.timestamp).toISOString().split("T")[0];
+      const matchesDate = selectedDate ? momentDate === selectedDate : true;
+      const matchesSearch =
+        m.content.toLowerCase().includes(query) ||
+        m.type.toLowerCase().includes(query) ||
+        m.track.some((t: string) => t.toLowerCase().includes(query));
+      return matchesDate && matchesSearch;
+    });
+  }, [moments, searchQuery, selectedDate]);
+
   return {
-    // State
     moments,
     filteredMoments,
     rules,
@@ -276,13 +313,13 @@ export const useDashboard = (token: string) => {
     searchQuery,
     selectedDate,
     isSettingsOpen,
-    // Setters
+    xp,
+    level,
     setEditorDraft,
     setViewMode,
     setSearchQuery,
     setSelectedDate,
     setIsSettingsOpen,
-    // Actions
     handleAddMoment,
     handleDeleteMoment,
     handleSaveRules,

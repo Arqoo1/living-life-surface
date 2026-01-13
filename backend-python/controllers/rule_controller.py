@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Dict, Any, List
 
-def evaluate(op: str, threshold: int, current: int) -> bool:
+def evaluate(op: str, threshold: float, current: float) -> bool:
     if op == ">": return current > threshold
     if op == "<": return current < threshold
     if op == ">=": return current >= threshold
@@ -13,17 +13,20 @@ def evaluate(op: str, threshold: int, current: int) -> bool:
 def evaluate_rules_logic(user_id: str, moment: Dict[str, Any], state: Dict[str, Any]) -> Dict[str, str]:
     """
     Evaluates rules and returns a dict of CSS variables.
-    Args:
-        user_id: string ID of the user
-        moment: A dictionary containing the rules list
-        state: A dictionary containing hour, minute, and lastMoment
+    Intelligence added: streak, momentCount, battery
     """
     result_variables: Dict[str, str] = {}
 
+    # --- DATA EXTRACTION ---
     now = datetime.now()
     hour = state.get("hour", now.hour)
     minute = state.get("minute", now.minute)
     current_total_minutes = hour * 60 + minute
+    
+    # Intelligence Data (Passed from Frontend)
+    streak = state.get("streak", 0)
+    moment_count = state.get("momentCount", 0)
+    battery = state.get("battery", 100)
     
     last_moment = state.get("lastMoment") or {}
     last_moment_type = str(last_moment.get("type", "")).lower()
@@ -45,7 +48,7 @@ def evaluate_rules_logic(user_id: str, moment: Dict[str, Any], state: Dict[str, 
             op, time_str, block_inner = block_match.groups()
             try:
                 r_hour, r_min = map(int, time_str.split(":"))
-                if evaluate(op, r_hour * 60 + r_min, current_total_minutes):
+                if evaluate(op, float(r_hour * 60 + r_min), float(current_total_minutes)):
                     set_matches = re.findall(r"set\s+ui\.([\w-]+)\s*=\s*([#\w\d]+)", block_inner, re.IGNORECASE)
                     for prop, val in set_matches:
                         prop_lower = prop.lower()
@@ -87,7 +90,56 @@ def evaluate_rules_logic(user_id: str, moment: Dict[str, Any], state: Dict[str, 
         )
         for match in old_regex.finditer(content):
             op, hr, val = match.groups()
-            if evaluate(op, int(hr), hour):
+            if evaluate(op, float(hr), float(hour)):
                 result_variables["--bg-main"] = val
+
+        # --- SECTION 4: NUMERIC INTELLIGENCE (Streak, Battery, Count) ---
+ # --- SECTION 4: NUMERIC INTELLIGENCE (Streak, Battery, Count, Level) ---
+        # UPDATED: Added 'level' to the regex capture group
+        num_block_regex = re.compile(
+            r"when\s+(streak|battery|momentCount|level)\s*(>=|<=|==|>|<)\s*(\d+)\s*\{([\s\S]*?)\}", 
+            re.IGNORECASE
+        )
+        
+        for block_match in num_block_regex.finditer(content):
+            var_name, op, threshold, block_inner = block_match.groups()
+            
+            # Map the string variable name to our actual data
+            lookup = {
+                "streak": streak,
+                "battery": battery,
+                "momentcount": moment_count,
+                "level": state.get("level", 1) # Successfully added from your Node backend
+            }
+            
+            current_val = lookup.get(var_name.lower(), 0)
+            
+            # Evaluate if (e.g., 5 >= 1)
+            if evaluate(op, float(threshold), float(current_val)):
+                set_matches = re.findall(r"set\s+ui\.([\w-]+)\s*=\s*([#\w\d]+)", block_inner, re.IGNORECASE)
+                for prop, val in set_matches:
+                    prop_lower = prop.lower()
+                    if prop_lower == "bg":
+                        result_variables["--bg-main"] = val
+                    elif prop_lower == "text":
+                        result_variables["--text-main"] = val
+                    elif prop_lower == "momentbg":
+                        result_variables["--moment-bg"] = val
+                    else:
+                        result_variables[f"--{prop_lower}"] = val
+
+        # --- SECTION 5: STATIC SETTINGS (Highest Priority) ---
+        static_set_regex = re.compile(r"set\s+ui\.([\w-]+)\s*=\s*['\"]?([#\w\d]+)['\"]?", re.IGNORECASE)
+        static_matches = static_set_regex.findall(content)
+        for prop, val in static_matches:
+            prop_lower = prop.lower()
+            if prop_lower == "bg":
+                result_variables["--bg-main"] = val
+            elif prop_lower == "text":
+                result_variables["--text-main"] = val
+            elif prop_lower == "momentbg":
+                result_variables["--moment-bg"] = val
+            else:
+                result_variables[f"--{prop_lower}"] = val
 
     return result_variables

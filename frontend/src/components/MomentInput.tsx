@@ -21,7 +21,6 @@ export const MomentInput: React.FC<MomentInputProps> = ({
   const [isPulsing, setIsPulsing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // --- AI STATE ---
   const [aiSuggestion, setAiSuggestion] = useState<{
     label: string;
     score: number;
@@ -43,7 +42,6 @@ export const MomentInput: React.FC<MomentInputProps> = ({
       const onMessage = (e: MessageEvent) => {
         const { status, progress, results, type: resultType, error } = e.data;
 
-        // --- 1. Handle Loading Progress ---
         if (status === "progress") {
           const p = progress <= 1 ? progress * 100 : progress;
           setDownloadProgress(Math.round(p));
@@ -56,13 +54,11 @@ export const MomentInput: React.FC<MomentInputProps> = ({
           console.log("✅ AI Worker Ready");
         }
 
-        // --- 2. Handle Analysis Results ---
         if (status === "complete") {
           if (resultType === "category" || resultType === "track") {
             setIsAnalyzing(false);
           }
 
-          // A: DISCOVERY LOGIC (Finding new words like "crying")
           if (resultType === "discovery") {
             let suggestedWord = "";
 
@@ -160,14 +156,12 @@ export const MomentInput: React.FC<MomentInputProps> = ({
     if (!worker.current || content.trim().length < 2) return;
     setIsAnalyzing(true);
 
-    // 1. Check existing categories (types)
     worker.current.postMessage({
       content: content.trim(),
       categories: availableTypes,
       type: "category",
     });
 
-    // 2. Check existing tracks
     const trackNames = tracks?.map((t) => t.name).filter(Boolean);
     if (trackNames && trackNames.length > 0) {
       worker.current.postMessage({
@@ -177,8 +171,7 @@ export const MomentInput: React.FC<MomentInputProps> = ({
       });
     }
 
-    // 3. ALWAYS run discovery to find new words,
-    // even if existing ones match!
+
     worker.current.postMessage({
       content: content.trim(),
       type: "discovery",

@@ -1,4 +1,5 @@
-@forward "reset"; 
+//Reset
+@forward "reset";
 
 // Components
 @forward "components/dashboard-header";
@@ -9,10 +10,22 @@
 @forward "components/StreakCounter";
 @forward "components/StreamInsights";
 @forward "components/TimeTravel";
-@forward "components/VibeHeatmap.scss";
+@forward "components/VibeHeatmap";
+@forward "components/DashboardRuleEngine";
+@forward "components/DashboardMomentSection";
+@forward "components/xp-section";
+@forward "components/battery-section";
+@forward "components/popup-type";
+@forward "components/SyncStatus";
+@forward "components/DashboardView";
 
-
+// Routes
 @forward "routes/Dashboard";
 @forward "routes/Login";
 @forward "routes/Register";
 @forward "routes/Profile";
+
+
+// Layouts
+@forward "layouts/Footer";
+@forward "layouts/Header";

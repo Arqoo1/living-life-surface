@@ -1,4 +1,3 @@
-
 export const DSL_LANGUAGE_ID = "life-surface-dsl";
 
 export const languageDef = {
@@ -7,7 +6,12 @@ export const languageDef = {
 
   tokenizer: {
     root: [
-      // Keywords
+      // 1. Hex Colors
+      [/'#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})'/, "string.color"],
+      [/"#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})"/, "string.color"],
+      [/#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/, "string.color"],
+
+      // 2. Keywords & Identifiers
       [
         /[a-z_$][\w$]*/,
         {
@@ -18,19 +22,16 @@ export const languageDef = {
         },
       ],
 
-      // Time patterns (22:00)
+      // 3. Time patterns 
       [/\d{2}:\d{2}/, "number.time"],
 
-      // Hex Colors (#06040b)
-      [/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/, "string.color"],
-
-      // UI Properties (ui.bg)
+      // 4. UI Properties 
       [/ui\.[a-zA-Z-]+/, "type.property"],
 
-      // Operators
+      // 5. Operators
       [/[>=|<=|==|>|<|=]/, "operator"],
 
-      // Brackets
+      // 6. Brackets
       [/[{}()\[\]]/, "@brackets"],
     ],
   },
@@ -40,10 +41,10 @@ export const themeDef = {
   base: "vs-dark" as const,
   inherit: true,
   rules: [
-    { token: "keyword", foreground: "C586C0", fontStyle: "bold" }, // Purple
-    { token: "type.property", foreground: "9CDCFE" }, // Light Blue
-    { token: "string.color", foreground: "CE9178" }, // Orange/Peach
-    { token: "number.time", foreground: "B5CEA8" }, // Green
+    { token: "keyword", foreground: "C586C0", fontStyle: "bold" }, 
+    { token: "type.property", foreground: "9CDCFE" },
+    { token: "string.color", foreground: "CE9178" }, 
+    { token: "number.time", foreground: "B5CEA8" }, 
     { token: "operator", foreground: "D4D4D4" },
   ],
   colors: {

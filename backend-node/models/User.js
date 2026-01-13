@@ -14,11 +14,20 @@ const userSchema = new mongoose.Schema(
     },
     profilePic: {
       type: String,
-      default: "default-guest.png", 
+      default: "default-guest.png",
     },
     resetPasswordCode: { type: String },
     resetPasswordExpires: { type: Date },
     rules: [{ type: mongoose.Schema.Types.ObjectId, ref: "Rule" }],
+    xp: {
+      type: Number,
+      default: 0,
+    },
+    level: {
+      type: Number,
+      default: 1,
+    },
+    lastXpUpdate: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -59,9 +59,7 @@ self.onmessage = async (event: MessageEvent<any>) => {
     } else {
       const classifier = await ClassifierSingleton.getInstance();
 
-      // --- DYNAMIC HYPOTHESIS LOGIC ---
-      // If type is 'track', we ask about activity/topic.
-      // If type is 'category', we ask about the emotion/feeling.
+
       const hypothesis =
         type === "track"
           ? "This activity is about {}."

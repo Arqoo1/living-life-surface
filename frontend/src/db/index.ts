@@ -1,6 +1,5 @@
 import Dexie, { type Table } from "dexie";
 
-// 1. Define types
 export interface LocalMoment {
   _id: string;
   type: string;
@@ -15,25 +14,33 @@ export interface LocalRule {
   updatedAt: string;
 }
 
-// 2. Define the Database class
+export interface LocalProfile {
+  id: string;
+  username: string;
+  email: string;
+  profilePic?: string; 
+  xp?: number;
+  level?: number;
+  _id?: string; 
+}
+
 export class LifeStreamDB extends Dexie {
-  //define so TypeScript knows they exist on the class
   moments!: Table<LocalMoment>;
   rules!: Table<LocalRule>;
+  profile!: Table<LocalProfile>;
 
   constructor() {
-    // Pass the database name to the base Dexie class
     super("LifeStreamDB");
 
-    // 3. Define the Schema
-    this.version(1).stores({
+    this.version(2).stores({
       moments: "_id, type, timestamp",
       rules: "_id",
+      profile: "id",
     });
 
-    // Explicitly link the table properties to the stores
     this.moments = this.table("moments");
     this.rules = this.table("rules");
+    this.profile = this.table("profile");
   }
 }
 

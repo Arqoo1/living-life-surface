@@ -28,7 +28,7 @@ const ResetPasswordModal: React.FC<Props> = ({ email, onClose, onSuccess }) => {
     setError("");
     try {
       await requestPasswordReset(email);
-      setTimer(60); // Wait 60 seconds before allowing another resend
+      setTimer(60); 
     } catch (err: any) {
       setError("Failed to resend code.");
     } finally {

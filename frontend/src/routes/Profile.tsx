@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
+import { db } from "../db"; 
 import {
   fetchProfile,
   updateProfile,
   uploadProfilePic,
-  requestPasswordReset, 
+  requestPasswordReset,
   type UserProfile,
 } from "../api/user";
-import ResetPasswordModal from "../components/ResetPasswordModal"; 
+import ResetPasswordModal from "../components/ResetPasswordModal";
 
 const Profile: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -15,23 +16,35 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false); 
-  const [sendingEmail, setSendingEmail] = useState(false); 
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const getProfile = async () => {
+    const initProfile = async () => {
       try {
+        const cached = await db.profile.get("current");
+        if (cached) {
+          setUser(cached as any);
+          setEditData({ username: cached.username, email: cached.email });
+          setLoading(false); 
+        }
+
         const { data } = await fetchProfile();
+
         setUser(data);
         setEditData({ username: data.username, email: data.email });
+        await db.profile.put({ id: "current", ...data });
       } catch (err: any) {
-        setError("Failed to load profile.");
+        console.error("Profile sync error:", err);
+        const stillNoUser = await db.profile.count();
+        if (stillNoUser === 0) setError("Failed to load profile.");
       } finally {
         setLoading(false);
       }
     };
-    getProfile();
+
+    initProfile();
   }, []);
 
   const triggerSuccess = (msg: string) => {
@@ -40,10 +53,15 @@ const Profile: React.FC = () => {
     setTimeout(() => setSuccessMessage(""), 3000);
   };
 
+  const updateLocalAndState = async (updatedUser: UserProfile) => {
+    setUser(updatedUser);
+    await db.profile.put({ id: "current", ...updatedUser });
+  };
+
   const handleSave = async () => {
     try {
       const { data } = await updateProfile(editData);
-      setUser(data.user);
+      await updateLocalAndState(data.user);
       setIsEditing(false);
       triggerSuccess("Profile updated successfully!");
     } catch (err: any) {
@@ -57,7 +75,7 @@ const Profile: React.FC = () => {
         ...editData,
         profilePic: "default-guest.png",
       });
-      setUser(data.user);
+      await updateLocalAndState(data.user);
       triggerSuccess("Photo removed.");
     } catch (err: any) {
       setError("Failed to remove photo.");
@@ -78,7 +96,10 @@ const Profile: React.FC = () => {
 
       try {
         const { data } = await uploadProfilePic(formData);
-        if (user) setUser({ ...user, profilePic: data.profilePic });
+        if (user) {
+          const updatedUser = { ...user, profilePic: data.profilePic };
+          await updateLocalAndState(updatedUser);
+        }
         triggerSuccess("Photo uploaded successfully!");
       } catch (err: any) {
         const serverMessage =
@@ -98,7 +119,6 @@ const Profile: React.FC = () => {
     setError("");
     try {
       await requestPasswordReset(user.email);
-
       setIsResetModalOpen(true);
       triggerSuccess("Reset code sent to your email!");
     } catch (err: any) {
@@ -108,7 +128,8 @@ const Profile: React.FC = () => {
     } finally {
       setSendingEmail(false);
     }
-    };
+  };
+
   if (loading) return <div className="loader">Loading...</div>;
 
   const imageUrl = user?.profilePic
@@ -225,7 +246,6 @@ const Profile: React.FC = () => {
           </div>
         )}
 
-        {/* Added: Security Section */}
         <hr className="divider" />
         <div
           className="security-section"
@@ -247,7 +267,6 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
-      {/* Added: Reset Modal Overlay */}
       {isResetModalOpen && user && (
         <ResetPasswordModal
           email={user.email}

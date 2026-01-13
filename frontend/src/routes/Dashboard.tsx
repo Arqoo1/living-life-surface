@@ -1,20 +1,36 @@
 import React from "react";
 import { useDashboard } from "../hooks/useDashboard";
+import { useBattery } from "../hooks/useBattery";
+import { useNotifications } from "../hooks/useNotifications";
+import { useLevelUp } from "../hooks/useLevelUp";
 
-// Components
-import { RuleEditor } from "../components/RuleEditor";
-import { MomentInput } from "../components/MomentInput";
-import { StreamInsights } from "../components/StreamInsights";
-import { SearchFilter } from "../components/SearchFilter";
-import { StreakCounter } from "../components/StreakCounter";
-import { VibeHeatmap } from "../components/VibeHeatmap";
-import { TimeTravel } from "../components/TimeTravel";
-import { SettingsModal } from "../components/SettingsModal";
-import { MomentCard } from "../components/MomentCard";
+import {
+  MomentInput,
+  StreamInsights,
+  SearchFilter,
+  StreakCounter,
+  VibeHeatmap,
+  TimeTravel,
+  SettingsModal,
+  XpSection,
+  BatterySection,
+  DashboardView,
+  DashboardRuleEngine,
+  DashboardMomentSection,
+  PopupType,
+  SyncStatus,
+} from "../components";
 
 const Dashboard: React.FC = () => {
   const token = localStorage.getItem("token") || "";
   const d = useDashboard(token);
+
+  const { engineNotification, showEngineAlert } = useNotifications();
+  const battery = useBattery(() => showEngineAlert("Power State Updated"));
+
+  useLevelUp(d.level, (lvl) =>
+    showEngineAlert(`LEVEL UP! You reached Level ${lvl}`)
+  );
 
   if (d.loading && d.moments.length === 0) {
     return <p className="loading-screen">Connecting to Stream...</p>;
@@ -22,6 +38,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container">
+      <PopupType notification={engineNotification} />
+
       <SettingsModal
         isOpen={d.isSettingsOpen}
         onClose={() => d.setIsSettingsOpen(false)}
@@ -35,37 +53,23 @@ const Dashboard: React.FC = () => {
         <div className="header-left">
           <h1>Life Stream</h1>
           <StreakCounter moments={d.moments} />
-
-          <div className="view-toggles">
-            <button
-              className={d.viewMode === "focus" ? "active" : ""}
-              onClick={() => d.setViewMode("focus")}
-            >
-              Focus
-            </button>
-            <button
-              className={d.viewMode === "editor" ? "active" : ""}
-              onClick={() => d.setViewMode("editor")}
-            >
-              Editor
-            </button>
-          </div>
-
-          <button
-            className="manage-btn"
-            onClick={() => d.setIsSettingsOpen(true)}
-          >
-            ⚙️ Manage
-          </button>
+          <XpSection
+            level={d.level}
+            xp={d.xp}
+            isLevelUpAnimating={!!engineNotification?.includes("LEVEL")}
+          />
+          <BatterySection battery={battery} />
+          <DashboardView
+            viewMode={d.viewMode}
+            setViewMode={d.setViewMode}
+            onOpenSettings={() => d.setIsSettingsOpen(true)}
+          />
         </div>
 
-        <div className="sync-status">
-          <div className={`sync-spinner ${d.isSyncing ? "syncing" : ""}`} />
-          <span>{d.isSyncing ? "Syncing..." : `Synced: ${d.syncMessage}`}</span>
-        </div>
+        <SyncStatus isSyncing={d.isSyncing} syncMessage={d.syncMessage} />
       </header>
 
-      <section style={{ marginBottom: "2rem" }}>
+      <section className="input-section">
         <MomentInput
           onAdd={d.handleAddMoment}
           tracks={d.tracks}
@@ -90,45 +94,21 @@ const Dashboard: React.FC = () => {
         onDateClick={(date) => d.setSelectedDate(date)}
       />
 
-      <section className="moments-section">
-        <div className="section-header">
-          <h2>
-            {d.selectedDate ? `Moments for ${d.selectedDate}` : "Moments"}
-          </h2>
-          {d.selectedDate && (
-            <button
-              className="clear-filter-btn"
-              onClick={() => d.setSelectedDate(null)}
-            >
-              ✕ Clear Filter
-            </button>
-          )}
-        </div>
-
-        <div className="moments-list">
-          {d.filteredMoments.map((m) => (
-            <MomentCard key={m._id} m={m} onDelete={d.handleDeleteMoment} />
-          ))}
-        </div>
-      </section>
+      <DashboardMomentSection
+        selectedDate={d.selectedDate}
+        filteredMoments={d.filteredMoments}
+        setSelectedDate={d.setSelectedDate}
+        handleDeleteMoment={d.handleDeleteMoment}
+      />
 
       {d.viewMode === "editor" && (
-        <section className="rules-engine">
-          <div className="rules-header">
-            <h2>Rules Engine</h2>
-            <button
-              className="save-btn"
-              onClick={d.handleSaveRules}
-              disabled={d.saveLoading}
-            >
-              {d.saveLoading ? "Saving..." : "Save Rules"}
-            </button>
-          </div>
-          <RuleEditor
-            code={d.editorDraft}
-            onSave={(val) => d.setEditorDraft(val)}
-          />
-        </section>
+        <DashboardRuleEngine
+          editorDraft={d.editorDraft}
+          setEditorDraft={d.setEditorDraft}
+          handleSaveRules={d.handleSaveRules}
+          saveLoading={d.saveLoading}
+          onShowAlert={showEngineAlert}
+        />
       )}
     </div>
   );

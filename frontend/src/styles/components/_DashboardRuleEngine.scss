@@ -1,0 +1,43 @@
+.rules-engine {
+  margin-top: 4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 2rem;
+
+  .rules-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+
+    .rules-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      h2 {
+        font-size: 0.9rem;
+        opacity: 0.5;
+        margin: 0;
+      }
+      .intel-badge {
+        font-size: 0.6rem;
+        color: #4ade80;
+        border: 1px solid #4ade80;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+    }
+
+    .save-btn {
+      background-color: #fff;
+      color: #000;
+      border: none;
+      padding: 0.4rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}

@@ -7,7 +7,6 @@ const Header: React.FC = () => {
     localStorage.getItem("token")
   );
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
-
   const location = useLocation();
 
   useEffect(() => {
@@ -17,10 +16,8 @@ const Header: React.FC = () => {
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
@@ -36,96 +33,49 @@ const Header: React.FC = () => {
     window.location.href = "/login";
   };
 
+  const navClass = (path: string) =>
+    `nav-link ${location.pathname === path ? "nav-link--active" : ""}`;
+
   return (
-    <header
-      style={{
-        padding: "1rem",
-        backgroundColor: "#2E186A",
-        color: "#fff",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-        <Link
-          to="/"
-          style={{
-            color: "#fff",
-            fontWeight: "bold",
-            textDecoration: "none",
-            fontSize: "1.2rem",
-          }}
-        >
-          Life Dashboard
+    <header className="header">
+      <div className="header__left">
+        <Link to="/" className="logo">
+          LIFE<span>.</span>
         </Link>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            backgroundColor: "rgba(0,0,0,0.2)",
-            padding: "4px 10px",
-            borderRadius: "20px",
-            fontSize: "0.75rem",
-          }}
-        >
-          <div
-            style={{
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              backgroundColor: isOnline ? "#4ade80" : "#9ca3af",
-              boxShadow: isOnline ? "0 0 8px #4ade80" : "none",
-              transition: "all 0.3s ease",
-            }}
-          />
-          <span style={{ opacity: 0.8, color: "#fff" }}>
-            {isOnline ? "Online" : "Offline"}
-          </span>
+        <div className="header__status">
+          <div className={`indicator ${isOnline ? "indicator--online" : ""}`} />
+          <span className="label">{isOnline ? "System Live" : "Offline"}</span>
         </div>
       </div>
 
-      <nav style={{ display: "flex", gap: "1rem" }}>
-        <Link to="/" style={{ color: "#fff", textDecoration: "none" }}>
+      <nav className="header__nav">
+        <Link to="/" className={navClass("/")}>
           Home
         </Link>
-        <Link to="/dashboard" style={{ color: "#fff", textDecoration: "none" }}>
+        <Link to="/dashboard" className={navClass("/dashboard")}>
           Dashboard
         </Link>
-        <Link to="/profile" style={{ color: "#fff", textDecoration: "none" }}>
+        <Link to="/profile" className={navClass("/profile")}>
           Profile
         </Link>
+
         {!token && (
           <>
-            <Link to="/login" style={{ color: "#fff", textDecoration: "none" }}>
+            <div className="divider" />
+            <Link to="/login" className={navClass("/login")}>
               Login
             </Link>
-            <Link
-              to="/signup"
-              style={{ color: "#fff", textDecoration: "none" }}
-            >
+            <Link to="/signup" className={navClass("/signup")}>
               Register
             </Link>
           </>
         )}
       </nav>
 
-      <div>
+      <div className="header__actions">
         {token && (
-          <button
-            onClick={handleLogout}
-            style={{
-              background: "#e190e3",
-              border: "none",
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              color: "#1b1b1b",
-              fontWeight: "bold",
-              borderRadius: "5px",
-            }}
-          >
+          <button onClick={handleLogout} className="logout-btn">
             Logout
           </button>
         )}
